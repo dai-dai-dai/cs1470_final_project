@@ -1,8 +1,13 @@
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras import Sequential
+<<<<<<< HEAD
 from tensorflow.keras.layers import \
     Conv2D, BatchNormalization, MaxPool2D, Dropout, Flatten, Dense
+=======
+from tensorflow.keras.layers import Dense, Flatten, Reshape
+from preprocess import get_data
+>>>>>>> 840905993ce9b14c652ddad432ef423c2ce31deb
 
 class Art_Model(tf.keras.Model):
     def __init__(self, num_classes):
@@ -12,7 +17,7 @@ class Art_Model(tf.keras.Model):
 
         self.hidden_dim = 100
         self.learning_rate = .01
-        self.epochs = 100
+        self.epochs = 10
 
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
         input_shape = (self.batch_size, None, None, 3) #to account for different shaped images
@@ -81,7 +86,7 @@ def main():
     model=Art_Model()
 
     for i in range(1, model.epochs):
-        print(f'epoch: {1}')
+        print(f'epoch: {i}')
         train(model, train_inputs, train_label)
 
     accuracy = test(model, test_inputs, test_labels)
