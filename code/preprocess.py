@@ -2,10 +2,14 @@ import os
 import enum
 import PIL
 import tensorflow as tf
+import numpy as np
 
 NUM_CLASSES = 12
 TARGET_HEIGHT = 600
 TARGET_WIDTH = 600
+# smallest (117, 249)
+# largest (3000, 2530)
+# average (635, 673)
 
 genre_to_index = {
         "abstract_expressionism": 0,
@@ -21,10 +25,6 @@ genre_to_index = {
         "romanticism": 10,
         "surrealism": 11
     }
-
-# smallest (117, 249)
-# largest (3000, 2530)
-# average (635, 673)
 
 def get_data(dir):
     # go through each folder in data
@@ -58,10 +58,16 @@ def get_data(dir):
                 label[index] = 1
                 labels.append(label)
 
-    
-    # ordered list of images, labels
     # shuffle
+    indices = np.arange(len(images))
+    np.random.shuffle(indices)
+    images = tf.gather(images, indices)
+    labels = tf.gather(labels, indices)
     # split to train and test 80/20
+    train_len = len(images) * 4 // 5
+    train_images, train_labels = images[:train_len], labels[:train_len]
+    test_images, test_labels = images[train_len:], labels[train_len:]
+    return train_images, train_labels, test_images, test_labels
 
 
 def main():
