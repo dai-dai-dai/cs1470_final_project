@@ -59,7 +59,6 @@ def get_data(dir):
                     # cv2.destroyAllWindows() 
                     images.append(tf.convert_to_tensor(resized))
                     labels.append(tf.one_hot(index, NUM_CLASSES))
-                    return
         print("____________________________________")
 
     # shuffle
