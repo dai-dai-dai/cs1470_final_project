@@ -3,7 +3,6 @@ import numpy as np
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import \
     Conv2D, BatchNormalization, MaxPool2D, Dropout, Flatten, Dense
-from tensorflow.keras.layers import Dense, Flatten, Reshape
 from preprocess import get_data
 
 class Art_Model(tf.keras.Model):
