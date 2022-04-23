@@ -7,6 +7,9 @@ import numpy as np
 NUM_CLASSES = 12
 TARGET_HEIGHT = 600
 TARGET_WIDTH = 600
+# smallest (117, 249)
+# largest (3000, 2530)
+# average (635, 673)
 
 class ArtGenre(enum.Enum):
     abstract_expressionism = 0
@@ -21,10 +24,6 @@ class ArtGenre(enum.Enum):
     rococo = 9
     romanticism = 10
     surrealism = 11
-
-# smallest (117, 249)
-# largest (3000, 2530)
-# average (635, 673)
 
 def get_data(dir):
     # go through each folder in data
