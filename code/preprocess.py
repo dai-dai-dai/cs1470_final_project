@@ -1,7 +1,11 @@
 import os
 import enum
-from scipy.misc import imread
+import PIL
 import tensorflow as tf
+
+NUM_CLASSES = 12
+TARGET_HEIGHT = 600
+TARGET_WIDTH = 600
 
 class ArtGenre(enum.Enum):
     abstract_expressionism = 0
@@ -17,22 +21,33 @@ class ArtGenre(enum.Enum):
     romanticism = 10
     surrealism = 11
 
-def one_hot(enum):
-    tf.zeros()
+# smallest (117, 249)
+# largest (3000, 2530)
+# average (635, 673)
 
 def get_data(dir):
-    # go through each folder in data/Pandora_V1
+    # go through each folder in data
     # get all images and add labels
     # return: list of 2D tensors (images), list of one hot encoded vectors (labels)
+
     images = []
-    labels = []
-    for root, dirs, files in os.walk(dir):
-        for subdirectory in dirs:
-            subdir_path = os.listdir(os.path.join(root, subdirectory))
-            for img in subdir_path:
-                filename = os.path.join(subdir_path, img)
-                images.append(tf.convert_to_tensor(imread(filename)))
-                labels.append(one_hot())
+    len_genre_dir = []
+    for root, subdirs, files in os.walk(dir):
+        # # shape: (# images, # classes)
+        genre_dir = os.listdir(root)
+        len_genre_dir.append(len(genre_dir))
+        for img in genre_dir:
+            filename = os.path.join(os.path.join(root, img))
+            try:
+                image = PIL.Image.open(filename)
+            except PIL.UnidentifiedImageError:
+                print(filename)
+                continue
+            ## resize here with pad for consistency
+            # resize w/ pad
+            resized = tf.image.resize_with_pad(image, )
+            images.append(tf.convert_to_tensor(image))
+
     # ordered list of images, labels
     # shuffle
     # split to train and test 80/20
@@ -40,7 +55,7 @@ def get_data(dir):
 
 def main():
     print("start")
-    preprocess("data")
+    get_data("data")
 
 if __name__ == '__main__':
 	main()
