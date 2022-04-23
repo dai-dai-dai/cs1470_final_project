@@ -1,13 +1,8 @@
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras import Sequential
-<<<<<<< HEAD
-from tensorflow.keras.layers import \
-    Conv2D, BatchNormalization, MaxPool2D, Dropout, Flatten, Dense
-=======
 from tensorflow.keras.layers import Dense, Flatten, Reshape
 from preprocess import get_data
->>>>>>> 840905993ce9b14c652ddad432ef423c2ce31deb
 
 class Art_Model(tf.keras.Model):
     def __init__(self, num_classes):
