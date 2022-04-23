@@ -33,7 +33,6 @@ def get_data(dir):
 
     images = []
     labels = []
-    print("hi")
     skip = True
     for root, subdirs, files in os.walk(dir):
         if skip:
