@@ -41,6 +41,7 @@ def get_data(dir):
             try:
                 image = PIL.Image.open(filename)
             except PIL.UnidentifiedImageError:
+                len_genre_dir[-1] -= 1
                 print(filename)
                 continue
             ## resize here with pad for consistency
