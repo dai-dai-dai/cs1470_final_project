@@ -13,6 +13,8 @@ class Art_Model(tf.keras.Model):
         self.learning_rate = .01
         self.epochs = None
 
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
+
         input_shape = (self.batch_size, None, None, 3) #to account for different shaped images
         self.layers = tf.keras.Sequential(
             tf.keras.layers.conv2D(
