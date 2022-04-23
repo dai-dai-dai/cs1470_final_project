@@ -3,6 +3,7 @@ import enum
 import PIL
 import tensorflow as tf
 import numpy as np
+import cv2
 
 NUM_CLASSES = 12
 TARGET_HEIGHT = 600
@@ -27,48 +28,52 @@ genre_to_index = {
     }
 
 def get_data(dir):
-    # go through each folder in data
-    # get all images and add labels
-    # return: list of 2D tensors (images), list of one hot encoded vectors (labels)
+    """ 
+        Get data from data folder, which is organised in folders by genre
+        :params:
+            dir: path to data folder from root directory
+        :returns:
+            train_images: list (num training images, (600,600,3))
+            train_labels: list (num training images, (num classes))
+            test_images: list (num testing images, (600,600,3))
+            test_labels: list (num testing images, (num classes))
+    """
 
     images = []
     labels = []
-    print("hi")
     skip = True
+    
     for root, subdirs, files in os.walk(dir):
         if skip:
             skip = False
             continue
-        # # shape: (# images, # classes)
+        print('root:', root)
         genre_dir = os.listdir(root)
-        print("root:",root)
         index = genre_to_index[root.split('/')[1]]
-        print('index:', index)
         for img in genre_dir:
             if img.endswith(".jpg"):
                 filename = os.path.join(os.path.join(root, img))
-                try:
-                    image = PIL.Image.open(filename)
-                except PIL.UnidentifiedImageError:
-                    print(filename)
-                    continue
-                resized = tf.image.resize_with_pad(image, TARGET_HEIGHT, TARGET_WIDTH, antialias=True)
-                images.append(tf.convert_to_tensor(resized))
-                label = tf.zeros([NUM_CLASSES,])
-                label[index] = 1
-                labels.append(label)
+                image = cv2.imread(filename)
+                if image is not None:
+                    resized = tf.image.resize_with_pad(image, TARGET_HEIGHT, TARGET_WIDTH, antialias=True)
+                    images.append(tf.convert_to_tensor(resized))
+                    labels.append(tf.one_hot(index, NUM_CLASSES))
+        print("____________________________________")
 
     # shuffle
     indices = np.arange(len(images))
     np.random.shuffle(indices)
     images = tf.gather(images, indices)
     labels = tf.gather(labels, indices)
+    print('image sample: ', images[0])
+    print('labels sample: ', labels[0:10])
+    
     # split to train and test 80/20
     train_len = len(images) * 4 // 5
     train_images, train_labels = images[:train_len], labels[:train_len]
     test_images, test_labels = images[train_len:], labels[train_len:]
+    
     return train_images, train_labels, test_images, test_labels
-
 
 def main():
     print("start")
