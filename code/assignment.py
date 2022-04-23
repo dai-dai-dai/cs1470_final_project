@@ -1,8 +1,13 @@
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras import Sequential
+<<<<<<< HEAD
+from tensorflow.keras.layers import \
+    Conv2D, BatchNormalization, MaxPool2D, Dropout, Flatten, Dense
+=======
 from tensorflow.keras.layers import Dense, Flatten, Reshape
 from preprocess import get_data
+>>>>>>> 840905993ce9b14c652ddad432ef423c2ce31deb
 
 class Art_Model(tf.keras.Model):
     def __init__(self, num_classes):
@@ -15,20 +20,22 @@ class Art_Model(tf.keras.Model):
         self.epochs = 10
 
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
-
         input_shape = (self.batch_size, None, None, 3) #to account for different shaped images
         self.layers = tf.keras.Sequential(
-            tf.keras.layers.conv2D(
+            Conv2D(
                 filters=8, 
                 kernel_size=4,
                 activation='relu',
                 input_shape=input_shape[1:],
                 padding='same'),
-            tf.keras.layers.Dense(self.hidden_dim, activation='relu'),
-            tf.keras.layers.Dropout(.25),
-            tf.keras.layers.Dense(self.hidden_dim, activation='relu'),
-            tf.keras.layers.Dropout(.25),
-            tf.keras.layers.Dense(self.hidden_dim, activation='softmax')
+            Dense(self.hidden_dim, activation='relu'),
+            Dropout(.25),
+            Dense(self.hidden_dim, activation='relu'),
+            Dropout(.25),
+            Dense(12, activation='softmax')
+            # things maybe to tweak:
+            # - add maxpool
+            # - tweak width & depth of convo layers
         )
 
     def call(self, inputs):
