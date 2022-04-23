@@ -53,21 +53,25 @@ def get_data(dir):
                 filename = os.path.join(genre_folder, image_path)
                 image = cv2.imread(filename)
                 if image is not None:
+                    image /= 255.0
                     resized = tf.image.resize_with_crop_or_pad(image, TARGET_HEIGHT, TARGET_WIDTH)
-                    # cv2.imshow('sample image',np.asarray(resized))
-                    # cv2.waitKey(0)
-                    # cv2.destroyAllWindows() 
                     images.append(tf.convert_to_tensor(resized))
                     labels.append(tf.one_hot(index, NUM_CLASSES))
         print("____________________________________")
 
+    # test display
+    # cv2.imshow('sample image',np.asarray(images[5]))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows() 
+
     # shuffle
+    print("shuffling data")
     indices = np.arange(len(images))
     np.random.shuffle(indices)
     images = tf.gather(images, indices)
     labels = tf.gather(labels, indices)
-    print('image sample: ', images[1])
-    print('labels sample: ', labels[0:10])
+    # print('image sample: ', images[1])
+    # print('labels sample: ', labels[0:10])
     
     # split to train and test 80/20
     train_len = len(images) * 4 // 5
