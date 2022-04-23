@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense, Flatten, Reshape
+from preprocess import get_data
 
 class Art_Model(tf.keras.Model):
     def __init__(self, num_classes):
@@ -11,7 +12,7 @@ class Art_Model(tf.keras.Model):
 
         self.hidden_dim = 100
         self.learning_rate = .01
-        self.epochs = None
+        self.epochs = 10
 
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
 
@@ -78,7 +79,7 @@ def main():
     model=Art_Model()
 
     for i in range(1, model.epochs):
-        print(f'epoch: {1}')
+        print(f'epoch: {i}')
         train(model, train_inputs, train_label)
 
     accuracy = test(model, test_inputs, test_labels)
