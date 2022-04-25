@@ -1,9 +1,6 @@
 import time
 import tensorflow as tf
 import numpy as np
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import \
-    Conv2D, BatchNormalization, MaxPool2D, Dropout, Flatten, Dense
 from preprocess import get_data, TARGET_HEIGHT, TARGET_WIDTH
 
 class Art_Model(tf.keras.Model):
@@ -135,8 +132,32 @@ def test(model, test_inputs, test_labels):
     Returns:
     - test_accuracy: The average accuracy across all batches
     """
+    ind = tf.random.shuffle(np.array(range(0, len(test_inputs))))
+    shuffled_inputs = tf.gather(test_inputs, ind)
+    shuffled_labels = tf.gather(test_labels, ind)
+
+    total_accuracy = 0.0
+
+    num_batches = int(len(test_inputs)/model.batch_size)
+    
+    for i in range(0, num_batches):      
+        inputs = shuffled_inputs[i*model.batch_size: (i+1)*model.batch_size]
+        #inputs = tf.image.random_flip_left_right(inputs)
+        
+        labels = shuffled_labels[i*model.batch_size: (i+1)*model.batch_size]
+
+        logits = model.call(inputs)
+        accuracy = model.accuracy(logits, labels)
+
+        total_accuracy += accuracy
+    
+    return total_accuracy / num_batches
     logits = model.call(test_inputs)
+    print("A: ", logits.size)
+    print("B: ", test_labels.size)
+    return
     test_accuracy = model.accuracy(logits, test_labels)
+    # print("C: ", test_accuracy.shape)
 
     return test_accuracy
 
@@ -152,26 +173,27 @@ def main():
 
     preprocess_start = time.time()
     print("PREPROCESSING...")
-    train_inputs, train_label, test_inputs, test_labels = get_data('data')
+    train_inputs, train_labels, test_inputs, test_labels = get_data('data')
     print("preprocess finished in ", time.time() - preprocess_start)
     print("---------------------------")
 
     train_start = time.time()
     model=Art_Model(num_classes=12, width=TARGET_WIDTH, height=TARGET_HEIGHT)
     print("TRAINING MODEL...")
-    for i in range(1, model.epochs):
+    for i in range(model.epochs):
         epoch_start = time.time()
-        loss = train(model, train_inputs, train_label)
+        loss = train(model, train_inputs, train_labels)
         print("---- epoch finished in ", time.time() - epoch_start)
-        print(f'epoch: {i} loss: {loss}')
+        print(f'epoch: {i+1} loss: {loss}')
     print("training finished in ", time.time() - train_start)
     print("---------------------------")
 
     test_start = time.time()
     print("TESTING MODEL...")
     accuracy = test(model, test_inputs, test_labels)
+    print(accuracy)
     print("testing finished in ", time.time() - test_start)
-    print(f'model accuracy: {accuracy}')
+    # print(f'model accuracy: {accuracy}')
     print("---------------------------")
 
 if __name__ == '__main__':
