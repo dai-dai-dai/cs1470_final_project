@@ -1,5 +1,6 @@
 import time
 import tensorflow as tf
+from tensorflow.keras import activations
 import numpy as np
 from preprocess import get_data, TARGET_HEIGHT, TARGET_WIDTH
 
@@ -13,8 +14,8 @@ class Art_Model(tf.keras.Model):
         self.width = width
         self.height = height
 
-        self.hidden_dim = 100
-        self.learning_rate = .01
+        self.hidden_dim = 256
+        self.learning_rate = .001
         self.epochs = 10
 
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
@@ -26,9 +27,11 @@ class Art_Model(tf.keras.Model):
                 activation='relu',
                 input_shape=input_shape,
                 padding='same'))
-        self.classifier.add(tf.keras.layers.Dense(self.hidden_dim, activation='relu'))
+        self.classifier.add(tf.keras.layers.Dense(self.hidden_dim))
+        self.classifier.add(tf.keras.layers.LeakyReLU(alpha=.3))
         self.classifier.add(tf.keras.layers.Dropout(.25))
-        self.classifier.add(tf.keras.layers.Dense(self.hidden_dim, activation='relu'))
+        self.classifier.add(tf.keras.layers.Dense(self.hidden_dim))
+        self.classifier.add(tf.keras.layers.LeakyReLU(alpha=.3))
         self.classifier.add(tf.keras.layers.Flatten())
         self.classifier.add(tf.keras.layers.Dropout(.25))
         self.classifier.add(tf.keras.layers.Dense(self.num_classes, activation='softmax'))
