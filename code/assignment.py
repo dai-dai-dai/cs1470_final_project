@@ -9,7 +9,7 @@ class Art_Model(tf.keras.Model):
         super(Art_Model, self).__init__()
 
         #hyperparameters:
-        self.batch_size = 100
+        self.batch_size = 300
         self.num_classes = num_classes
         self.width = width
         self.height = height
@@ -22,11 +22,23 @@ class Art_Model(tf.keras.Model):
         
         input_shape = (self.width, self.height, 3) #to account for different shaped images
         self.classifier = tf.keras.Sequential()
+        
         self.classifier.add(tf.keras.layers.Conv2D(filters=8, 
                 kernel_size=4,
                 activation='relu',
                 input_shape=input_shape,
                 padding='same'))
+        self.classifier.add(tf.keras.layers.BatchNormalization(
+            axis=-1, epsilon=.001, center=True))
+        self.classifier.add(tf.keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2), padding='valid'))
+        self.classifier.add(tf.keras.layers.Conv2D(filters=8, 
+                kernel_size=4,
+                activation='relu',
+                input_shape=input_shape,
+                padding='same'))
+        self.classifier.add(tf.keras.layers.BatchNormalization(
+            axis=-1, epsilon=.001, center=True))
+        self.classifier.add(tf.keras.layers.MaxPool2D(pool_size=(2,2), strides=(2,2), padding='valid'))
         self.classifier.add(tf.keras.layers.Dense(self.hidden_dim))
         self.classifier.add(tf.keras.layers.LeakyReLU(alpha=.3))
         self.classifier.add(tf.keras.layers.Dropout(.25))
@@ -107,7 +119,6 @@ def train(model, train_inputs, train_labels):
     
     for i in range(0, int(len(train_inputs)/model.batch_size)):      
         inputs = shuffled_inputs[i*model.batch_size: (i+1)*model.batch_size]
-        #inputs = tf.image.random_flip_left_right(inputs)
         
         labels = shuffled_labels[i*model.batch_size: (i+1)*model.batch_size]
 
