@@ -256,16 +256,16 @@ def main():
     print(f'model accuracy: {accuracy}')
     print("---------------------------")
 
-    # print("SAMPLING")
-    # sample_start = time.time()
-    # rows = sample(model, sample_files, sample_images, sample_labels)
-    # with open("sample.csv", 'w') as csvfile: 
-    #     # creating a csv writer object 
-    #     csvwriter = csv.writer(csvfile)    
-    #     # writing the fields 
-    #     csvwriter.writerows(rows) 
-    # print("sampling finished in ", time.time() - sample_start)
-    # print("---------------------------")
+    print("SAMPLING")
+    sample_start = time.time()
+    rows = sample(model, sample_files, sample_images, sample_labels)
+    with open("sample.csv", 'w') as csvfile: 
+        # creating a csv writer object 
+        csvwriter = csv.writer(csvfile)    
+        # writing the fields 
+        csvwriter.writerows(rows) 
+    print("sampling finished in ", time.time() - sample_start)
+    print("---------------------------")
 
     print("CATEGORICAL ACCURACY")
     cat_acc_start = time.time()
