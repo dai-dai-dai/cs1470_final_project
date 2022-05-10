@@ -4,8 +4,8 @@ import numpy as np
 import cv2
 
 NUM_CLASSES = 12
-TARGET_HEIGHT = 100
-TARGET_WIDTH = 100
+TARGET_HEIGHT = 150
+TARGET_WIDTH = 150
 # smallest (117, 249)
 # largest (3000, 2530)
 # average (635, 673)
@@ -36,6 +36,7 @@ def get_files(dir):
                 filepaths.append(os.path.join(root, file)) 
     return filepaths
 
+
 def get_data(dir):
     """ 
         Get data from data folder, which is organised in folders by genre
@@ -50,6 +51,18 @@ def get_data(dir):
 
     images = []
     labels = []
+    
+    sample_files = []
+    sample_images = []
+    sample_labels = []
+    images_by_category = []
+    matching_labels = []
+    for i in range(NUM_CLASSES):
+        sample_files.append([])
+        sample_images.append([])
+        sample_labels.append([])
+        images_by_category.append([])
+        matching_labels.append([])
     
     # genre_folder_paths = [x[0] for x in os.walk(dir)] # list of str paths (data/realism... etc)
     # for genre_folder in genre_folder_paths[1:]: # ignore first (root)
@@ -75,9 +88,16 @@ def get_data(dir):
         genre_index = genre_to_index[genre] # index associated with genre (0-11)
         image = cv2.imread(filepath)
         if image is not None:
-            resized = tf.image.resize_with_crop_or_pad(image / 255.0, TARGET_HEIGHT, TARGET_WIDTH)
-            images.append(tf.convert_to_tensor(resized))
-            labels.append(tf.one_hot(genre_index, NUM_CLASSES))
+            resized = tf.convert_to_tensor(tf.image.resize_with_crop_or_pad(image / 255.0, TARGET_HEIGHT, TARGET_WIDTH))
+            label = tf.one_hot(genre_index, NUM_CLASSES)
+            images.append(resized)
+            labels.append(label)
+            images_by_category[genre_index].append(resized)
+            matching_labels[genre_index].append(label)
+            if len(sample_images[genre_index]) < 5:
+                sample_files[genre_index].append(filepath)
+                sample_images[genre_index].append(resized)
+                sample_labels[genre_index].append(label)
 
     # test display
     # cv2.imshow('sample image',np.asarray(images[5]))
@@ -97,7 +117,7 @@ def get_data(dir):
     train_images, train_labels = images[:train_len], labels[:train_len]
     test_images, test_labels = images[train_len:], labels[train_len:]
     
-    return train_images, train_labels, test_images, test_labels
+    return train_images, train_labels, test_images, test_labels, sample_files, sample_images, sample_labels, images_by_category, matching_labels
 
 def main():
     print("start")

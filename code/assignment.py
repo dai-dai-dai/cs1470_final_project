@@ -2,7 +2,8 @@ import time
 import tensorflow as tf
 from tensorflow.keras import activations
 import numpy as np
-from preprocess import get_data, TARGET_HEIGHT, TARGET_WIDTH
+import csv
+from preprocess import get_data, TARGET_HEIGHT, TARGET_WIDTH, genre_to_index
 
 class Art_Model(tf.keras.Model):
     def __init__(self, num_classes, width, height):
@@ -152,7 +153,7 @@ def test(model, test_inputs, test_labels):
 
     total_accuracy = 0.0
 
-    num_batches = int(len(test_inputs)/model.batch_size)
+    num_batches = max(1, int(len(test_inputs)/model.batch_size))
     
     for i in range(0, num_batches):      
         inputs = shuffled_inputs[i*model.batch_size: (i+1)*model.batch_size]
@@ -175,6 +176,50 @@ def test(model, test_inputs, test_labels):
 
     return test_accuracy
 
+index_to_genre = {
+        0: "abstract_expressionism",
+        1: "baroque",
+        2: "cubism",
+        3: "fauvism",
+        4: "high_renaissance",
+        5: "iconoclasm",
+        6: "impressionism",
+        7: "old_greek_pottery",
+        8: "realism",
+        9: "rococo",
+        10: "romanticism",
+        11: "surrealism"
+    }
+
+def sample(model, sample_files, sample_images, sample_labels):
+    rows = [["filename", "true label", "predicted", "0: abstract_expressionism", "1: baroque", "2: cubism", "3: fauvism", "4: high_renaissance", "5: iconoclasm", "6: impressionism", "7: old_greek_pottery", "8: realism", "9: rococo", "10:romanticism", "11: surrealism"]]
+    for i in range(len(sample_images)):
+        for j in range(len(sample_images[i])):
+            filepath = sample_files[i][j]
+            genre = filepath.split('/')[1]
+            image = tf.reshape(sample_images[i][j], shape=(1, TARGET_HEIGHT, TARGET_WIDTH, 3))
+            logit = model.call(image)
+            predicted = str(tf.get_static_value(tf.argmax(logit)))
+            row = [filepath, genre_to_index[genre], predicted]
+            rows.append(row + [str(x) for x in logit.numpy().tolist()])
+    return rows
+
+def get_categorical_accuracy(model, images_by_category, matching_labels):
+    categorical_accuracy = []
+    prediction_distribution = []
+    for i in range(model.num_classes):
+        num_images = len(images_by_category[i])
+        ind = tf.random.shuffle(np.array(range(0, num_images)))
+        shuffled_inputs = tf.gather(images_by_category[i], ind)
+        logits = model.call(shuffled_inputs)
+        y, _, counts = tf.unique_with_counts(tf.argmax(logits, 1))
+        prediction_distribution.append((y, counts))
+        # get prediction distribution for each
+        accuracy = test(model, images_by_category[i], matching_labels[i])
+        categorical_accuracy.append(accuracy)
+    return prediction_distribution, categorical_accuracy
+
+
 def main():
     """ 
     Reads in image data (12 classes), initializes Art_Model, and trains model for 
@@ -187,9 +232,11 @@ def main():
 
     preprocess_start = time.time()
     print("PREPROCESSING...")
-    train_inputs, train_labels, test_inputs, test_labels = get_data('data')
+    train_inputs, train_labels, test_inputs, test_labels, sample_files, sample_images, sample_labels, images_by_category, matching_labels = get_data('data')
     print("preprocess finished in ", time.time() - preprocess_start)
     print("---------------------------")
+
+    print(sample_files)
 
     train_start = time.time()
     model=Art_Model(num_classes=12, width=TARGET_WIDTH, height=TARGET_HEIGHT)
@@ -205,10 +252,29 @@ def main():
     test_start = time.time()
     print("TESTING MODEL...")
     accuracy = test(model, test_inputs, test_labels)
-    print(accuracy)
     print("testing finished in ", time.time() - test_start)
-    # print(f'model accuracy: {accuracy}')
+    print(f'model accuracy: {accuracy}')
     print("---------------------------")
+
+    # print("SAMPLING")
+    # sample_start = time.time()
+    # rows = sample(model, sample_files, sample_images, sample_labels)
+    # with open("sample.csv", 'w') as csvfile: 
+    #     # creating a csv writer object 
+    #     csvwriter = csv.writer(csvfile)    
+    #     # writing the fields 
+    #     csvwriter.writerows(rows) 
+    # print("sampling finished in ", time.time() - sample_start)
+    # print("---------------------------")
+
+    print("CATEGORICAL ACCURACY")
+    cat_acc_start = time.time()
+    cat_acc, prediction_distribution = get_categorical_accuracy(model, images_by_category, matching_labels)
+    for i in range(model.num_classes):
+        print(f'--- {index_to_genre[i]} --- {cat_acc[i]} --- {prediction_distribution[i]}')
+    print("categorical accuracy finished in ", time.time() - cat_acc_start)
+    print("---------------------------")
+
 
 if __name__ == '__main__':
 	main()
