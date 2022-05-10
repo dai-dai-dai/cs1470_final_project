@@ -3,14 +3,17 @@ import tensorflow as tf
 import numpy as np
 import cv2
 
-NUM_CLASSES = 12
-TARGET_HEIGHT = 150
-TARGET_WIDTH = 150
+# ------------------------ EXPORTED VARIABLES ------------------------
+
 # smallest (117, 249)
 # largest (3000, 2530)
 # average (635, 673)
+NUM_SAMPLES = 5
+NUM_CLASSES = 12
+TARGET_HEIGHT = 150
+TARGET_WIDTH = 150
 
-genre_to_index = {
+GENRE_TO_INDEX = {
         "abstract_expressionism": 0,
         "baroque": 1,
         "cubism": 2,
@@ -25,10 +28,29 @@ genre_to_index = {
         "surrealism": 11
     }
 
-def is_jpg(filepath):
-    return filepath.endswith(".jpg")
+INDEX_TO_GENRE = {v: k for k, v in GENRE_TO_INDEX.items()}
+
+
+# ------------------------ UTIL FUNCTIONS ------------------------
+
+def is_jpg(file):
+    """
+        Determines whether filepath is .jpg
+        ::params::
+            str file: file path name
+        ::returns::
+            True if filepath is .jpg, false otherwise
+    """
+    return file.endswith(".jpg")
 
 def get_files(dir):
+    """
+        Gets all files in directory
+        ::params::
+            str dir: directory path name
+        ::returns::
+            filepaths: list of all filepath names in directory
+    """
     filepaths = []
     for root, _, files in os.walk(dir, topdown = False):
         for file in files:
@@ -37,24 +59,36 @@ def get_files(dir):
     return filepaths
 
 
+# ------------------------ PREPROCESSING FUNCTION ------------------------
+
 def get_data(dir):
     """ 
         Get data from data folder, which is organised in folders by genre
+        - training and testing data: used to train and test the model
+        - sampling data: a random sample to get a sense of how the model predicts specific images
+        - data by category: the data organized by category to calculate categorical accuracy and prediction distribution per genre
         ::params::
             dir: path to data folder from root directory
         ::returns::
-            train_images: list (num training images, (600,600,3))
-            train_labels: list (num training images, (num classes))
-            test_images: list (num testing images, (600,600,3))
-            test_labels: list (num testing images, (num classes))
+            train_images: list (num training images, (TARGET_WIDTH,TARGET_HEGITH,3))
+            train_labels: list (num training images, (NUM_CLASSES))
+            test_images: list (num testing images, (TARGET_WIDTH,TARGET_HEGITH,3))
+            test_labels: list (num testing images, (NUM_CLASSES))
+            sample_files: at each index, contains a list of five random image paths of the genre
+            sample_images: at each index, contains a list of corresponding images
+            sample_labels: at each index, contains a list of corresponding labels
+            images_by_category: at each index, contains a list of all images belonging to the genre
+            matching_labels: at each index, contains a list of corresponding labels
     """
 
+    # training and testing data
     images = []
     labels = []
-    
+    # sampling data
     sample_files = []
     sample_images = []
     sample_labels = []
+    # data by category
     images_by_category = []
     matching_labels = []
     for i in range(NUM_CLASSES):
@@ -63,21 +97,6 @@ def get_data(dir):
         sample_labels.append([])
         images_by_category.append([])
         matching_labels.append([])
-    
-    # genre_folder_paths = [x[0] for x in os.walk(dir)] # list of str paths (data/realism... etc)
-    # for genre_folder in genre_folder_paths[1:]: # ignore first (root)
-    #     genre = genre_folder.split('/')[1]
-    #     print("genre:", genre)
-    #     index = genre_to_index[genre] # index associated with genre (0-11)
-    #     for image_path in os.listdir(genre_folder): # loop paintings
-    #         if image_path.endswith(".jpg"):
-    #             filename = os.path.join(genre_folder, image_path)
-    #             image = cv2.imread(filename)
-    #             if image is not None:
-    #                 resized = tf.image.resize_with_crop_or_pad(image / 255.0, TARGET_HEIGHT, TARGET_WIDTH)
-    #                 images.append(tf.convert_to_tensor(resized))
-    #                 labels.append(tf.one_hot(index, NUM_CLASSES))
-    #     print("____________________________________")
 
     filepaths = get_files(dir)
     indices = np.arange(len(filepaths))
@@ -85,16 +104,20 @@ def get_data(dir):
     for i in indices:
         filepath = filepaths[i]
         genre = filepath.split('/')[1]
-        genre_index = genre_to_index[genre] # index associated with genre (0-11)
+        genre_index = GENRE_TO_INDEX[genre] # index associated with genre (0-11)
         image = cv2.imread(filepath)
         if image is not None:
+            # construct image & label tensors
             resized = tf.convert_to_tensor(tf.image.resize_with_crop_or_pad(image / 255.0, TARGET_HEIGHT, TARGET_WIDTH))
             label = tf.one_hot(genre_index, NUM_CLASSES)
+            # training and testing data
             images.append(resized)
             labels.append(label)
+            # data by category
             images_by_category[genre_index].append(resized)
             matching_labels[genre_index].append(label)
-            if len(sample_images[genre_index]) < 5:
+            # sampling data
+            if len(sample_images[genre_index]) < NUM_SAMPLES:
                 sample_files[genre_index].append(filepath)
                 sample_images[genre_index].append(resized)
                 sample_labels[genre_index].append(label)
@@ -118,10 +141,3 @@ def get_data(dir):
     test_images, test_labels = images[train_len:], labels[train_len:]
     
     return train_images, train_labels, test_images, test_labels, sample_files, sample_images, sample_labels, images_by_category, matching_labels
-
-def main():
-    print("start")
-    get_data("data")
-
-if __name__ == '__main__':
-	main()
